@@ -19,6 +19,7 @@ import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.debug.BreakpointManager;
 import org.eclipse.che.ide.api.debug.DebuggerServiceClient;
+import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.resources.Resource;
 import org.eclipse.che.ide.api.resources.VirtualFile;
@@ -54,6 +55,7 @@ public class GdbDebugger extends AbstractDebugger {
                        EventBus eventBus,
                        GdbDebuggerFileHandler activeFileHandler,
                        DebuggerManager debuggerManager,
+                       NotificationManager notificationManager,
                        BreakpointManager breakpointManager,
                        AppContext appContext) {
 
@@ -64,6 +66,7 @@ public class GdbDebugger extends AbstractDebugger {
               eventBus,
               activeFileHandler,
               debuggerManager,
+              notificationManager,
               breakpointManager,
               ID);
         this.appContext = appContext;
