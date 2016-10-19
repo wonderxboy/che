@@ -12,11 +12,18 @@ package org.eclipse.che.api.environment.server.compose;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 /**
  * Description of docker compose service.
@@ -168,8 +175,25 @@ public class ComposeServiceImpl {
         return environment;
     }
 
-    public void setEnvironment(Map<String, String> environment) {
-        this.environment = environment;
+    public void setEnvironment(Object environment) {
+        try {
+            if (environment instanceof Map) {
+                this.environment = (Map<String, String>) environment;
+                return;
+            }
+
+            if (environment instanceof List) {
+                // convert list of values in view of ["key1=value1", "key2=value2"] to Map<String, String>{ key1: value1, key2: value2 }
+                this.environment = ((List<String>) environment).stream()
+                                                               .collect(Collectors.toMap(item -> item.split("=")[0],
+                                                                                         item -> item.split("=")[1]));
+                return;
+            }
+        } catch(Exception e) {
+            throw new RuntimeException(format("Unsupported value '%s'.", environment.toString()));
+        }
+
+        throw new RuntimeException(format("Unsupported type '%s'.", environment.getClass()));
     }
 
     public ComposeServiceImpl withEnvironment(Map<String, String> environment) {

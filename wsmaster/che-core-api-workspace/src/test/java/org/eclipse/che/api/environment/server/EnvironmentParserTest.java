@@ -294,6 +294,26 @@ public class EnvironmentParserTest {
         assertEquals(cheServicesEnvironment, expected);
     }
 
+    @Test
+    public void shouldParseMapTypeEnvironment() {
+
+    }
+
+    @Test
+    public void shouldParseListTypeEnvironment() {
+
+    }
+
+    @Test
+    public void shouldThrowErrorOnUnsupportedTypeOfEnvironment() {
+
+    }
+
+    @Test
+    public void shouldThrowErrorOnUnsupportedFormatOfListEnvironment() {
+
+    }
+
     @Test(dataProvider = "environmentWithServersProvider")
     public void shouldAddPortsAndLabelsFromExtendedMachineServers(EnvironmentImpl environment,
                                                                   CheServicesEnvironmentImpl expectedEnv,
