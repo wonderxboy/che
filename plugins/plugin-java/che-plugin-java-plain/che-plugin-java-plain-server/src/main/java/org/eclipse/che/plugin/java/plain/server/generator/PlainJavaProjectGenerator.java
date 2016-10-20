@@ -18,6 +18,9 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.project.server.FolderEntry;
 import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
 import org.eclipse.che.api.project.server.type.AttributeValue;
+import org.eclipse.che.api.vfs.Path;
+import org.eclipse.che.api.vfs.VirtualFileSystem;
+import org.eclipse.che.api.vfs.VirtualFileSystemProvider;
 import org.eclipse.che.plugin.java.plain.server.projecttype.ClasspathBuilder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -45,8 +48,11 @@ public class PlainJavaProjectGenerator implements CreateProjectHandler {
     @Inject
     private ClasspathBuilder classpathBuilder;
 
+    @Inject
+    private VirtualFileSystemProvider virtualFileSystemProvider;
+
     @Override
-    public void onCreateProject(FolderEntry baseFolder,
+    public void onCreateProject(Path projectPath,
                                 Map<String, AttributeValue> attributes,
                                 Map<String, String> options) throws ForbiddenException, ConflictException, ServerException {
         List<String> sourceFolders;
@@ -56,6 +62,8 @@ public class PlainJavaProjectGenerator implements CreateProjectHandler {
             sourceFolders = singletonList(DEFAULT_SOURCE_FOLDER_VALUE);
         }
 
+        VirtualFileSystem vfs = virtualFileSystemProvider.getVirtualFileSystem();
+        FolderEntry baseFolder  = new FolderEntry(vfs.getRoot().createFolder(projectPath.toString()));
         baseFolder.createFolder(DEFAULT_OUTPUT_FOLDER_VALUE);
         FolderEntry sourceFolder = baseFolder.createFolder(sourceFolders.get(0));
 

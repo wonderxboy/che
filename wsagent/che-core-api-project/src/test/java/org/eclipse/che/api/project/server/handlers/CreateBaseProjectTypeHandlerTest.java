@@ -11,6 +11,7 @@
 package org.eclipse.che.api.project.server.handlers;
 
 import org.eclipse.che.api.project.server.FolderEntry;
+import org.eclipse.che.api.vfs.Path;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
@@ -28,9 +29,10 @@ public class CreateBaseProjectTypeHandlerTest {
 
     @Test
     public void testCreateProject() throws Exception {
-        FolderEntry folderEntry = mock(FolderEntry.class);
-        CreateBaseProjectTypeHandler createBaseProjectTypeHandler = new CreateBaseProjectTypeHandler();
-        createBaseProjectTypeHandler.onCreateProject(folderEntry, null, null);
-        verify(folderEntry).createFile(anyString(), any(byte[].class));
+        Path path = mock(Path.class);
+        CreateBaseProjectTypeHandler createBaseProjectTypeHandler = mock(CreateBaseProjectTypeHandler.class);
+        createBaseProjectTypeHandler.onCreateProject(path, null, null);
+        verify(path).toString();
+        verify(createBaseProjectTypeHandler).getReadmeContent();
     }
 }

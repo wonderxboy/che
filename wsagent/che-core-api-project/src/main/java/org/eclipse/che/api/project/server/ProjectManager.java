@@ -22,16 +22,12 @@ import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.project.type.ProjectType;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.LineConsumerFactory;
-import org.eclipse.che.api.project.server.handlers.GenerateProjectHandler;
+import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
 import org.eclipse.che.api.project.server.importer.ProjectImportOutputWSLineConsumer;
 import org.eclipse.che.api.project.server.importer.ProjectImporter;
 import org.eclipse.che.api.project.server.importer.ProjectImporterRegistry;
-import org.eclipse.che.api.project.server.type.BaseProjectType;
-import org.eclipse.che.api.project.server.type.ProjectTypeDef;
-import org.eclipse.che.api.project.server.type.ProjectTypeRegistry;
-import org.eclipse.che.api.project.server.type.ProjectTypeResolution;
-import org.eclipse.che.api.project.server.type.ValueStorageException;
+import org.eclipse.che.api.project.server.type.*;
 import org.eclipse.che.api.project.shared.dto.event.FileWatcherEventType;
 import org.eclipse.che.api.vfs.Path;
 import org.eclipse.che.api.vfs.VirtualFile;
@@ -40,6 +36,7 @@ import org.eclipse.che.api.vfs.VirtualFileSystemProvider;
 import org.eclipse.che.api.vfs.impl.file.FileTreeWatcher;
 import org.eclipse.che.api.vfs.impl.file.FileWatcherNotificationHandler;
 import org.eclipse.che.api.vfs.impl.file.FileWatcherNotificationListener;
+import org.eclipse.che.api.vfs.impl.file.LocalVirtualFile;
 import org.eclipse.che.api.vfs.impl.file.event.LoEvent;
 import org.eclipse.che.api.vfs.impl.file.event.detectors.ProjectTreeChangesDetector;
 import org.eclipse.che.api.vfs.search.Searcher;
@@ -235,14 +232,22 @@ public final class ProjectManager {
                 throw new ConflictException("Project config already exists " + path);
             }
 
-            final GenerateProjectHandler generator = handlers.getGenerateProjectHandler(projectConfig.getType());
+            final CreateProjectHandler generator = handlers.getCreateProjectHandler(projectConfig.getType());
             FolderEntry projectFolder;
             if (generator != null) {
+                Map<String, AttributeValue> valueMap = new HashMap<>();
+                Map<String, List<String>> attributes = projectConfig.getAttributes();
+                if (attributes != null) {
+                      for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
+                           valueMap.put(entry.getKey(), new AttributeValue(entry.getValue()));
+                      }
+                }
                 if (options == null) {
                     options = new HashMap<>();
                 }
-                generator.onCreateProject(new FolderEntry(vfs.getRoot()), projectConfig, options);
-                projectFolder = new FolderEntry(vfs.getRoot().getChild(Path.of(path)));
+                Path projectPath = Path.of(path);
+                generator.onCreateProject(projectPath, valueMap, options);
+                projectFolder = new FolderEntry(vfs.getRoot().getChild(projectPath), projectRegistry);
             } else {
                 projectFolder = new FolderEntry(vfs.getRoot().createFolder(path), projectRegistry);
             }

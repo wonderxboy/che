@@ -13,11 +13,17 @@ package org.eclipse.che.plugin.maven.server.projecttype.handler;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.project.server.FolderEntry;
+import org.eclipse.che.api.project.server.type.AttributeValue;
+import org.eclipse.che.api.vfs.Path;
+import org.eclipse.che.api.vfs.VirtualFile;
+import org.eclipse.che.api.vfs.VirtualFileSystem;
+import org.eclipse.che.api.vfs.VirtualFileSystemProvider;
 import org.eclipse.che.ide.maven.tools.Build;
 import org.eclipse.che.ide.maven.tools.Model;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.Map;
 
 import static org.eclipse.che.ide.ext.java.shared.Constants.SOURCE_FOLDER;
@@ -38,7 +44,16 @@ import static org.eclipse.che.plugin.maven.shared.MavenAttributes.VERSION;
  *
  * @author Artem Zatsarynnyi
  */
+@Singleton
 public class SimpleGeneratorStrategy implements GeneratorStrategy {
+
+
+    private final VirtualFileSystem vfs;
+
+    @Inject
+    public SimpleGeneratorStrategy(VirtualFileSystemProvider vfsProvider) throws ServerException {
+        vfs = vfsProvider.getVirtualFileSystem();
+    }
 
     @Override
     public String getId() {
@@ -46,13 +61,11 @@ public class SimpleGeneratorStrategy implements GeneratorStrategy {
     }
 
     @Override
-    public void generateProject(FolderEntry baseFolder, ProjectConfig projectConfig, Map<String, String> options)
+    public void generateProject(Path projectPath, Map<String, AttributeValue> attributes, Map<String, String> options)
             throws ForbiddenException, ConflictException, ServerException {
-
-
-        String artifactId = projectConfig.getAttributes().get(ARTIFACT_ID).get(0);
-        String groupId = projectConfig.getAttributes().get(GROUP_ID).get(0);
-        String version = projectConfig.getAttributes().get(VERSION).get(0);
+        AttributeValue artifactId = attributes.get(ARTIFACT_ID);
+        AttributeValue groupId = attributes.get(GROUP_ID);
+        AttributeValue version = attributes.get(VERSION);
         if (artifactId == null) {
             throw new ConflictException("Missed required attribute artifactId");
         }
@@ -68,39 +81,43 @@ public class SimpleGeneratorStrategy implements GeneratorStrategy {
         Model model = Model.createModel();
         model.setModelVersion("4.0.0");
 
+        final FolderEntry baseFolder = new FolderEntry(vfs.getRoot().createFolder(projectPath.toString()));
+
+
         if (baseFolder.getChild("pom.xml") == null) {
             baseFolder.createFile("pom.xml", new byte[0]);
         }
 
-        String parentArtifactId = projectConfig.getAttributes().get(PARENT_ARTIFACT_ID).get(0);
+        AttributeValue parentArtifactId = attributes.get(PARENT_ARTIFACT_ID);
         if (parentArtifactId != null) {
-            model.setArtifactId(parentArtifactId);
+            model.setArtifactId(parentArtifactId.getString());
         }
-        String parentGroupId = projectConfig.getAttributes().get(PARENT_GROUP_ID).get(0);
+        AttributeValue parentGroupId = attributes.get(PARENT_GROUP_ID);
         if (parentGroupId != null) {
-            model.setGroupId(parentGroupId);
+            model.setGroupId(parentGroupId.getString());
         }
-        String parentVersion = projectConfig.getAttributes().get(PARENT_VERSION).get(0);
+        AttributeValue parentVersion = attributes.get(PARENT_VERSION);
         if (parentVersion != null) {
-            model.setVersion(parentVersion);
+            model.setVersion(parentVersion.getString());
         }
-        model.setArtifactId(artifactId);
-        model.setGroupId(groupId);
-        model.setVersion(version);
-        String packaging = projectConfig.getAttributes().get(PACKAGING).get(0);
-
+        model.setArtifactId(artifactId.getString());
+        model.setGroupId(groupId.getString());
+        model.setVersion(version.getString());
+        AttributeValue packaging = attributes.get(PACKAGING);
         if (packaging != null) {
-            model.setPackaging(packaging);
+            model.setPackaging(packaging.getString());
         }
-        String sourceFolder = projectConfig.getAttributes().get(SOURCE_FOLDER).get(0);
-        if (sourceFolder != null) {
+        AttributeValue sourceFolders = attributes.get(SOURCE_FOLDER);
+        if (sourceFolders != null) {
+            final String sourceFolder = sourceFolders.getString();
             baseFolder.createFolder(sourceFolder);
             if (!DEFAULT_SOURCE_FOLDER.equals(sourceFolder)) {
                 model.setBuild(new Build().setSourceDirectory(sourceFolder));
             }
         }
-        String testSourceFolder = projectConfig.getAttributes().get(TEST_SOURCE_FOLDER).get(0);
-        if (testSourceFolder != null) {
+        AttributeValue testSourceFolders = attributes.get(TEST_SOURCE_FOLDER);
+        if (testSourceFolders != null) {
+            final String testSourceFolder = testSourceFolders.getString();
             baseFolder.createFolder(testSourceFolder);
             if (!DEFAULT_TEST_SOURCE_FOLDER.equals(testSourceFolder)) {
                 Build build = model.getBuild();

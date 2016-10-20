@@ -16,6 +16,7 @@ import org.eclipse.che.api.core.util.ProcessUtil;
 import org.eclipse.che.api.core.util.ValueHolder;
 import org.eclipse.che.api.core.util.Watchdog;
 import org.eclipse.che.api.core.util.WebsocketLineConsumer;
+import org.eclipse.che.ide.maven.tools.MavenArtifact;
 import org.eclipse.che.ide.maven.tools.MavenUtils;
 import org.eclipse.che.plugin.maven.generator.archetype.dto.MavenArchetype;
 import org.slf4j.Logger;
@@ -40,30 +41,24 @@ public class ArchetypeGenerator {
     private static final Logger     LOG            = LoggerFactory.getLogger(ArchetypeGenerator.class);
 
     /**
-     * Generates a new project from the specified archetype.
+     * Generates a new project from the specified archetype by given maven artifact descriptor.
      *
      * @param archetype
      *         archetype from which need to generate new project
-     * @param groupId
-     *         groupId of new project
-     * @param artifactId
-     *         artifactId of new project
-     * @param version
-     *         version of new project
-     * @return generating task
+     * @param mavenArtifact
+     *         maven artifact descriptor
      * @throws ServerException
      *         if an error occurs while generating project
      */
-    public void generateFromArchetype(File workDir, @NotNull MavenArchetype archetype, @NotNull String groupId, @NotNull String artifactId,
-                                      @NotNull String version) throws ServerException {
+    public void generateFromArchetype(File workDir, @NotNull MavenArchetype archetype, MavenArtifact mavenArtifact) throws ServerException {
         Map<String, String> archetypeProperties = new HashMap<>();
         archetypeProperties.put("-DinteractiveMode", "false"); // get rid of the interactivity of the archetype plugin
         archetypeProperties.put("-DarchetypeGroupId", archetype.getGroupId());
         archetypeProperties.put("-DarchetypeArtifactId", archetype.getArtifactId());
         archetypeProperties.put("-DarchetypeVersion", archetype.getVersion());
-        archetypeProperties.put("-DgroupId", groupId);
-        archetypeProperties.put("-DartifactId", artifactId);
-        archetypeProperties.put("-Dversion", version);
+        archetypeProperties.put("-DgroupId", mavenArtifact.getGroupId());
+        archetypeProperties.put("-DartifactId", mavenArtifact.getArtifactId());
+        archetypeProperties.put("-Dversion", mavenArtifact.getVersion());
         if (archetype.getRepository() != null) {
             archetypeProperties.put("-DarchetypeRepository", archetype.getRepository());
         }
@@ -71,9 +66,8 @@ public class ArchetypeGenerator {
             archetypeProperties.putAll(archetype.getProperties());
         }
         final CommandLine commandLine = createCommandLine(archetypeProperties);
-
         try {
-            execute(commandLine.toShellCommand(), workDir, 100);
+            execute(commandLine.toShellCommand(), workDir);
         } catch (TimeoutException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -84,12 +78,25 @@ public class ArchetypeGenerator {
     }
 
 
-    void execute(String[] commandLine, File workDir, int timeout) throws TimeoutException, IOException, InterruptedException {
+    /**
+     * Execute maven archetype command
+     *
+     * @param commandLine
+     *         command to execution e.g.
+     *         mvn archetype:generate -DarchetypeGroupId=<archetype-groupId>  -DarchetypeArtifactId=<archetype-artifactId>
+     *               -DarchetypeVersion=<archetype-version> -DgroupId=<my.groupid>      -DartifactId=<my-artifactId>
+     * @param workDir
+     *         folder where command will execute in common use root dir of workspace
+     * @throws TimeoutException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void execute(String[] commandLine, File workDir) throws TimeoutException, IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(commandLine).redirectErrorStream(true).directory(workDir);
         WebsocketLineConsumer websocketLineConsumer = new WebsocketLineConsumer("maven-archetype");
 
         // process will be stopped after timeout
-        Watchdog watcher = new Watchdog(timeout, TimeUnit.SECONDS);
+        Watchdog watcher = new Watchdog(60, TimeUnit.SECONDS);
 
         try {
             final Process process = pb.start();
@@ -102,16 +109,23 @@ public class ArchetypeGenerator {
             ProcessUtil.process(process, websocketLineConsumer);
             process.waitFor();
             if (isTimeoutExceeded.get()) {
-                LOG.error("Generation project tome expired : command-line " + commandLine);
+                LOG.error("Generation project time expired : command-line " + commandLine);
                 throw new TimeoutException();
             } else if (process.exitValue() != 0) {
-                throw new IOException("Process failed. Exit code " + process.exitValue());
+                LOG.error("Generation project fail : command-line " + commandLine);
+                throw new IOException("Process failed. Exit code " + process.exitValue() + " command-line : " + commandLine);
             }
         } finally {
             watcher.stop();
         }
     }
 
+    /**
+     * Create specified command
+     * @param archetypeProperties
+     * @return
+     * @throws ServerException
+     */
     private CommandLine createCommandLine(Map<String, String> archetypeProperties) throws ServerException {
         final CommandLine commandLine = new CommandLine(MavenUtils.getMavenExecCommand());
         commandLine.add("--batch-mode");

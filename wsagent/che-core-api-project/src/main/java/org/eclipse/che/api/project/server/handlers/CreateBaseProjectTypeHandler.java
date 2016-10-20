@@ -10,15 +10,20 @@
  *******************************************************************************/
 package org.eclipse.che.api.project.server.handlers;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.project.server.FolderEntry;
 import org.eclipse.che.api.project.server.type.AttributeValue;
 import org.eclipse.che.api.project.server.type.BaseProjectType;
+import org.eclipse.che.api.vfs.Path;
+import org.eclipse.che.api.vfs.VirtualFileSystem;
+import org.eclipse.che.api.vfs.VirtualFileSystemProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
 
@@ -34,12 +39,17 @@ public class CreateBaseProjectTypeHandler implements CreateProjectHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(CreateBaseProjectTypeHandler.class);
 
+    @Inject
+    private VirtualFileSystemProvider virtualFileSystemProvider;
+
     private final String README_FILE_NAME = "README";
 
     @Override
-    public void onCreateProject(FolderEntry baseFolder,
+    public void onCreateProject(Path projectPath,
                                 Map<String, AttributeValue> attributes,
                                 Map<String, String> options) throws ForbiddenException, ConflictException, ServerException {
+        VirtualFileSystem vfs = virtualFileSystemProvider.getVirtualFileSystem();
+        FolderEntry baseFolder  = new FolderEntry(vfs.getRoot().createFolder(projectPath.toString()));
         baseFolder.createFile(README_FILE_NAME, getReadmeContent());
     }
 
@@ -48,7 +58,8 @@ public class CreateBaseProjectTypeHandler implements CreateProjectHandler {
         return BaseProjectType.ID;
     }
 
-    private byte[] getReadmeContent() {
+    @VisibleForTesting
+    protected byte[] getReadmeContent() {
         String filename = "README.blank";
         try {
             return toByteArray(getResource(filename));

@@ -16,7 +16,11 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.project.server.FolderEntry;
 import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
 import org.eclipse.che.api.project.server.type.AttributeValue;
+import org.eclipse.che.api.vfs.Path;
+import org.eclipse.che.api.vfs.VirtualFileSystem;
+import org.eclipse.che.api.vfs.VirtualFileSystemProvider;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -29,13 +33,19 @@ import static org.eclipse.che.plugin.jsonexample.shared.Constants.JSON_EXAMPLE_P
  */
 public class JsonExampleCreateProjectHandler implements CreateProjectHandler {
 
+    @Inject
+    private VirtualFileSystemProvider virtualFileSystemProvider;
+
     private static final String FILE_NAME = "package.json";
 
     @Override
-    public void onCreateProject(FolderEntry baseFolder,
+    public void onCreateProject(Path projectPath,
                                 Map<String, AttributeValue> attributes,
                                 Map<String, String> options)
             throws ForbiddenException, ConflictException, ServerException {
+
+        VirtualFileSystem vfs = virtualFileSystemProvider.getVirtualFileSystem();
+        FolderEntry baseFolder  = new FolderEntry(vfs.getRoot().createFolder(projectPath.toString()));
 
         try (InputStream packageJson = getClass().getClassLoader().getResourceAsStream("files/default_package");
              InputStream personJson = getClass().getClassLoader().getResourceAsStream("files/default_person")) {
