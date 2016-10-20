@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.plugin.maven.server.projecttype.handler;
+package org.eclipse.che.api.project.server.handlers;
 
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
@@ -19,12 +19,11 @@ import org.eclipse.che.api.project.server.FolderEntry;
 import java.util.Map;
 
 /**
- * @author Vitaly Parfonov
+ * @author gazarenkov
  */
-public interface GeneratorStrategy  {
+public interface GenerateProjectHandler extends ProjectHandler {
 
-    String getId();
-
-    void generateProject(final FolderEntry baseFolder, ProjectConfig projectConfig, Map<String, String> options)
-            throws ForbiddenException, ConflictException, ServerException;
+    void onCreateProject(FolderEntry baseFolder,
+                         ProjectConfig projectConfig,
+                         Map<String, String> options) throws ForbiddenException, ConflictException, ServerException;
 }

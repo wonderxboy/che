@@ -26,6 +26,7 @@ import java.util.Set;
 public class ProjectHandlerRegistry {
 
     private final Map<String, CreateProjectHandler>     createProjectHandlers;
+    private final Map<String, GenerateProjectHandler>   generateProjectHandlers;
     private final Map<String, PostImportProjectHandler> postImportProjectHandlers;
     private final Map<String, GetItemHandler>           getItemHandlers;
     private final Map<String, ProjectInitHandler>       projectInitHandlers;
@@ -36,6 +37,7 @@ public class ProjectHandlerRegistry {
         postImportProjectHandlers = new HashMap<>();
         getItemHandlers = new HashMap<>();
         projectInitHandlers = new HashMap<>();
+        generateProjectHandlers = new HashMap<>();
 
         projectHandlers.forEach(this::register);
     }
@@ -49,12 +51,19 @@ public class ProjectHandlerRegistry {
             postImportProjectHandlers.put(handler.getProjectType(), (PostImportProjectHandler)handler);
         } else if (handler instanceof ProjectInitHandler) {
             projectInitHandlers.put(handler.getProjectType(), (ProjectInitHandler)handler);
+        } else if (handler instanceof GenerateProjectHandler) {
+            generateProjectHandlers.put(handler.getProjectType(), (GenerateProjectHandler)handler);
         }
     }
 
     @Nullable
     public CreateProjectHandler getCreateProjectHandler(@NotNull String projectType) {
         return createProjectHandlers.get(projectType);
+    }
+
+    @Nullable
+    public GenerateProjectHandler getGenerateProjectHandler(@NotNull String projectType) {
+        return generateProjectHandlers.get(projectType);
     }
 
     @Nullable
@@ -71,4 +80,6 @@ public class ProjectHandlerRegistry {
     public ProjectInitHandler getProjectInitHandler(@NotNull String projectType) {
         return projectInitHandlers.get(projectType);
     }
+
+
 }

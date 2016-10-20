@@ -52,7 +52,8 @@ public class MavenMessagesHandler {
     private final EventBus                  eventBus;
     private final BackgroundLoaderPresenter dependencyResolver;
     private final PomEditorReconciler       pomEditorReconciler;
-    private final AppContext                appContext;
+    private       WsAgentStateController    agentStateController;
+    private final AppContext appContext;
 
     @Inject
     public MavenMessagesHandler(EventBus eventBus,
@@ -65,6 +66,7 @@ public class MavenMessagesHandler {
 
         this.dependencyResolver = dependencyResolver;
         this.pomEditorReconciler = pomEditorReconciler;
+        this.agentStateController = agentStateController;
         this.appContext = appContext;
 
         handleOperations(factory, agentStateController);
@@ -101,6 +103,13 @@ public class MavenMessagesHandler {
                                         default:
                                             Log.error(getClass(), "Unknown message type:" + messageType);
                                     }
+                                }
+                            });
+
+                            messageBus.subscribe("maven-archetype", new MessageHandler() {
+                                @Override
+                                public void onMessage(String message) {
+                                    Log.info(getClass(), message);
                                 }
                             });
                         } catch (WebSocketException e) {
@@ -143,6 +152,8 @@ public class MavenMessagesHandler {
 
         pomEditorReconciler.reconcilePoms(updatedProjects);
     }
+
+
 
     private Set<String> computeUniqueHiLevelProjects(List<String> updatedProjects) {
         Set<String> result = new HashSet<>();

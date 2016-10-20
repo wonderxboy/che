@@ -25,5 +25,5 @@ public interface CreateProjectHandler extends ProjectHandler {
 
     void onCreateProject(FolderEntry baseFolder,
                          Map<String, AttributeValue> attributes,
-                         Map <String, String> options) throws ForbiddenException, ConflictException, ServerException;
+                         Map<String, String> options) throws ForbiddenException, ConflictException, ServerException;
 }

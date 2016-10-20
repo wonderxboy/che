@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.maven.server.projecttype.handler;
 
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
 import org.eclipse.che.api.core.rest.HttpJsonResponse;
@@ -18,7 +19,6 @@ import org.eclipse.che.api.project.server.FolderEntry;
 import org.eclipse.che.api.project.server.ProjectManager;
 import org.eclipse.che.api.project.server.VirtualFileEntry;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
-import org.eclipse.che.api.project.server.type.AttributeValue;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.api.project.server.type.ProjectTypeRegistry;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
@@ -39,10 +39,11 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.Arrays.asList;
 import static org.eclipse.che.ide.ext.java.shared.Constants.SOURCE_FOLDER;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -81,17 +82,20 @@ public class SimpleGeneratorStrategyTest {
         prepareProject();
         final Path pomXml = Paths.get(Thread.currentThread().getContextClassLoader().getResource("test-pom.xml").toURI());
 
-        Map<String, AttributeValue> attributeValues = new HashMap<>();
-        attributeValues.put(MavenAttributes.ARTIFACT_ID, new AttributeValue("my_artifact"));
-        attributeValues.put(MavenAttributes.GROUP_ID, new AttributeValue("my_group"));
-        attributeValues.put(MavenAttributes.PACKAGING, new AttributeValue("jar"));
-        attributeValues.put(MavenAttributes.VERSION, new AttributeValue("1.0-SNAPSHOT"));
-        attributeValues.put(SOURCE_FOLDER, new AttributeValue("src/main/java"));
-        attributeValues.put(MavenAttributes.TEST_SOURCE_FOLDER, new AttributeValue("src/test/java"));
+        Map<String, List<String>> attributeValues = new HashMap<>();
+        attributeValues.put(MavenAttributes.ARTIFACT_ID, asList("my_artifact"));
+        attributeValues.put(MavenAttributes.GROUP_ID, asList("my_group"));
+        attributeValues.put(MavenAttributes.PACKAGING, asList("jar"));
+        attributeValues.put(MavenAttributes.VERSION, asList("1.0-SNAPSHOT"));
+        attributeValues.put(SOURCE_FOLDER, asList("src/main/java"));
+        attributeValues.put(MavenAttributes.TEST_SOURCE_FOLDER, asList("src/test/java"));
 
         FolderEntry folder = pm.getProject("my_project").getBaseFolder();
 
-        simple.generateProject(folder, attributeValues, null);
+        ProjectConfig  projectConfig = mock(ProjectConfig.class);
+        when(projectConfig.getAttributes()).thenReturn(attributeValues);
+
+        simple.generateProject(folder, projectConfig, null);
 
         VirtualFileEntry pomFile = pm.getProject("my_project").getBaseFolder().getChild("pom.xml");
         Assert.assertTrue(pomFile.isFile());

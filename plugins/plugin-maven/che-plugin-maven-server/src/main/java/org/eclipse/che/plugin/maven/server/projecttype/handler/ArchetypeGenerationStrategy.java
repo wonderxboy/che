@@ -15,8 +15,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.project.server.FolderEntry;
-import org.eclipse.che.api.project.server.type.AttributeValue;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.plugin.maven.generator.archetype.ArchetypeGenerator;
 import org.eclipse.che.plugin.maven.generator.archetype.dto.MavenArchetype;
@@ -67,12 +67,12 @@ public class ArchetypeGenerationStrategy implements GeneratorStrategy {
     }
 
     @Override
-    public void generateProject(final FolderEntry baseFolder, Map<String, AttributeValue> attributes, Map<String, String> options)
+    public void generateProject(final FolderEntry baseFolder, ProjectConfig projectConfig, Map<String, String> options)
             throws ForbiddenException, ConflictException, ServerException {
 
-        AttributeValue artifactId = attributes.get(ARTIFACT_ID);
-        AttributeValue groupId = attributes.get(GROUP_ID);
-        AttributeValue version = attributes.get(VERSION);
+        String artifactId = projectConfig.getAttributes().get(ARTIFACT_ID).get(0);
+        String groupId = projectConfig.getAttributes().get(GROUP_ID).get(0);
+        String version = projectConfig.getAttributes().get(VERSION).get(0);
         if (groupId == null || artifactId == null || version == null) {
             throw new ServerException("Missed some required attribute (groupId, artifactId or version)");
         }
@@ -115,9 +115,7 @@ public class ArchetypeGenerationStrategy implements GeneratorStrategy {
                                                    .withRepository(archetypeRepository)
                                                    .withProperties(archetypeProperties);
 
-        archetypeGenerator.generateFromArchetype(archetype,
-                                                 groupId.getList().get(0),
-                                                 artifactId.getList().get(0),
-                                                 version.getList().get(0));
+        archetypeGenerator.generateFromArchetype(baseFolder.getVirtualFile().toIoFile(), archetype,  groupId, artifactId, version);
+
     }
 }

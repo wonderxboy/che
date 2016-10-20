@@ -13,8 +13,10 @@ package org.eclipse.che.plugin.maven.server.projecttype.handler;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.project.server.FolderEntry;
 import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
+import org.eclipse.che.api.project.server.handlers.GenerateProjectHandler;
 import org.eclipse.che.api.project.server.type.AttributeValue;
 import org.eclipse.che.plugin.maven.shared.MavenAttributes;
 
@@ -31,7 +33,7 @@ import java.util.Set;
  * @author gazarenkov
  */
 @Singleton
-public class MavenProjectGenerator implements CreateProjectHandler {
+public class MavenProjectGenerator implements GenerateProjectHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(MavenProjectGenerator.class);
 
@@ -53,13 +55,13 @@ public class MavenProjectGenerator implements CreateProjectHandler {
     }
 
     @Override
-    public void onCreateProject(FolderEntry baseFolder, Map<String, AttributeValue> attributes,
+    public void onCreateProject(FolderEntry baseFolder, ProjectConfig projectConfig,
                                 Map<String, String> options) throws ForbiddenException, ConflictException, ServerException {
         if (options == null || options.isEmpty() || !options.containsKey("type")) {
-            strategies.get(MavenAttributes.SIMPLE_GENERATION_STRATEGY).generateProject(baseFolder, attributes, options);
+            strategies.get(MavenAttributes.SIMPLE_GENERATION_STRATEGY).generateProject(baseFolder, projectConfig, options);
         } else {
             if (strategies.containsKey(options.get("type"))) {
-                strategies.get(options.get("type")).generateProject(baseFolder, attributes, options);
+                strategies.get(options.get("type")).generateProject(baseFolder, projectConfig, options);
             } else {
                 String errorMsg = String.format("Generation strategy %s not found", options.get("type"));
                 LOG.warn("MavenProjectGenerator", errorMsg);

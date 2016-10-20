@@ -243,6 +243,11 @@ public class MavenPagePresenter extends AbstractWizardPage<MutableProjectConfig>
 
     @Override
     public void archetypeChanged(MavenArchetype archetype) {
+        dataObject.getOptions().put("type", "archetype");
+        dataObject.getOptions().put("archetypeGroupId", archetype.getGroupId());
+        dataObject.getOptions().put("archetypeArtifactId", archetype.getArtifactId());
+        dataObject.getOptions().put("archetypeVersion", archetype.getVersion());
+        dataObject.getOptions().put("archetypeRepository", archetype.getRepository());
         updateDelegate.updateControls();
     }
 

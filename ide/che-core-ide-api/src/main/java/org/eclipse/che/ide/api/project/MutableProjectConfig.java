@@ -16,6 +16,7 @@ import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.project.SourceStorage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ public class MutableProjectConfig implements ProjectConfig {
     private String                    type;
     private List<String>              mixins;
     private Map<String, List<String>> attributes;
+    private Map<String, String>       options;
     private MutableSourceStorage      sourceStorage;
 
     public MutableProjectConfig(ProjectConfig source) {
@@ -43,11 +45,14 @@ public class MutableProjectConfig implements ProjectConfig {
         type = source.getType();
         mixins = newArrayList(source.getMixins());
         attributes = newHashMap(source.getAttributes());
+        options =  new HashMap<>();
         sourceStorage = new MutableSourceStorage(source.getSource());
     }
 
     public MutableProjectConfig() {
     }
+
+
 
     @Override
     public String getName() {
@@ -122,6 +127,17 @@ public class MutableProjectConfig implements ProjectConfig {
 
     public void setSource(SourceStorage sourceStorage) {
         this.sourceStorage = new MutableSourceStorage(sourceStorage);
+    }
+
+    public Map<String, String> getOptions() {
+        if (options == null) {
+            options = new HashMap<>();
+        }
+        return options;
+    }
+
+    public void setOptions(Map<String, String> options) {
+        this.options = options;
     }
 
     public class MutableSourceStorage implements SourceStorage {

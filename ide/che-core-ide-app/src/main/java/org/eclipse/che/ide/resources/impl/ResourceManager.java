@@ -36,6 +36,7 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.event.ng.DeletedFilesController;
 import org.eclipse.che.ide.api.machine.DevMachine;
 import org.eclipse.che.ide.api.machine.WsAgentURLModifier;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
 import org.eclipse.che.ide.api.project.ProjectServiceClient;
 import org.eclipse.che.ide.api.project.QueryExpression;
 import org.eclipse.che.ide.api.project.type.ProjectTypeRegistry;
@@ -433,7 +434,7 @@ public final class ResourceManager {
                     return update(path, createRequest);
                 }
 
-                return ps.createProject(dto).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
+                return ps.createProject(dto, ((MutableProjectConfig)createRequest.getBody()).getOptions()).thenPromise(new Function<ProjectConfigDto, Promise<Project>>() {
                     @Override
                     public Promise<Project> apply(ProjectConfigDto config) throws FunctionException {
                         final Project newResource = resourceFactory.newProjectImpl(config, ResourceManager.this);

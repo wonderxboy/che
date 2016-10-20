@@ -22,12 +22,11 @@ import org.eclipse.che.api.core.model.project.SourceStorage;
 import org.eclipse.che.api.core.model.project.type.ProjectType;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.LineConsumerFactory;
-import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
+import org.eclipse.che.api.project.server.handlers.GenerateProjectHandler;
 import org.eclipse.che.api.project.server.handlers.ProjectHandlerRegistry;
 import org.eclipse.che.api.project.server.importer.ProjectImportOutputWSLineConsumer;
 import org.eclipse.che.api.project.server.importer.ProjectImporter;
 import org.eclipse.che.api.project.server.importer.ProjectImporterRegistry;
-import org.eclipse.che.api.project.server.type.AttributeValue;
 import org.eclipse.che.api.project.server.type.BaseProjectType;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.api.project.server.type.ProjectTypeRegistry;
@@ -236,23 +235,16 @@ public final class ProjectManager {
                 throw new ConflictException("Project config already exists " + path);
             }
 
-            final FolderEntry projectFolder = new FolderEntry(vfs.getRoot().createFolder(path), projectRegistry);
-            final CreateProjectHandler generator = handlers.getCreateProjectHandler(projectConfig.getType());
-
+            final GenerateProjectHandler generator = handlers.getGenerateProjectHandler(projectConfig.getType());
+            FolderEntry projectFolder;
             if (generator != null) {
-                Map<String, AttributeValue> valueMap = new HashMap<>();
-                Map<String, List<String>> attributes = projectConfig.getAttributes();
-
-                if (attributes != null) {
-                    for (Map.Entry<String, List<String>> entry : attributes.entrySet()) {
-                        valueMap.put(entry.getKey(), new AttributeValue(entry.getValue()));
-                    }
-                }
-
                 if (options == null) {
                     options = new HashMap<>();
                 }
-                generator.onCreateProject(projectFolder, valueMap, options);
+                generator.onCreateProject(new FolderEntry(vfs.getRoot()), projectConfig, options);
+                projectFolder = new FolderEntry(vfs.getRoot().getChild(Path.of(path)));
+            } else {
+                projectFolder = new FolderEntry(vfs.getRoot().createFolder(path), projectRegistry);
             }
 
             final RegisteredProject project;
@@ -260,6 +252,7 @@ public final class ProjectManager {
                 project = projectRegistry.putProject(projectConfig, projectFolder, true, false);
             } catch (Exception e) {
                 // rollback project folder
+
                 projectFolder.getVirtualFile().delete();
                 throw e;
             }

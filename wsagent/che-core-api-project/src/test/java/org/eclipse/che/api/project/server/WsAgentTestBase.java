@@ -255,8 +255,8 @@ public class WsAgentTestBase {
             @Override
             public void onCreateProject(FolderEntry baseFolder, Map<String, AttributeValue> attributes, Map<String, String> options)
                     throws ForbiddenException, ConflictException, ServerException {
-
-                baseFolder.createFolder("file1");
+                FolderEntry projectFolder = baseFolder.createFolder(options.get("projectPath"));
+                projectFolder.createFolder("file1");
 
             }
 

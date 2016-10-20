@@ -19,6 +19,7 @@ import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.ide.resource.Path;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Serves the connections with the server side project service.
@@ -87,7 +88,7 @@ public interface ProjectServiceClient {
      * @see ProjectConfigDto
      * @since 4.4.0
      */
-    Promise<ProjectConfigDto> createProject(ProjectConfigDto configuration);
+    Promise<ProjectConfigDto> createProject(ProjectConfigDto configuration, Map<String, String> options);
 
     /**
      * Returns the item description by given {@code path}.

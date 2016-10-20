@@ -13,8 +13,8 @@ package org.eclipse.che.plugin.maven.server.projecttype.handler;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.project.server.FolderEntry;
-import org.eclipse.che.api.project.server.type.AttributeValue;
 import org.eclipse.che.ide.maven.tools.Build;
 import org.eclipse.che.ide.maven.tools.Model;
 
@@ -46,11 +46,13 @@ public class SimpleGeneratorStrategy implements GeneratorStrategy {
     }
 
     @Override
-    public void generateProject(FolderEntry baseFolder, Map<String, AttributeValue> attributes, Map<String, String> options)
+    public void generateProject(FolderEntry baseFolder, ProjectConfig projectConfig, Map<String, String> options)
             throws ForbiddenException, ConflictException, ServerException {
-        AttributeValue artifactId = attributes.get(ARTIFACT_ID);
-        AttributeValue groupId = attributes.get(GROUP_ID);
-        AttributeValue version = attributes.get(VERSION);
+
+
+        String artifactId = projectConfig.getAttributes().get(ARTIFACT_ID).get(0);
+        String groupId = projectConfig.getAttributes().get(GROUP_ID).get(0);
+        String version = projectConfig.getAttributes().get(VERSION).get(0);
         if (artifactId == null) {
             throw new ConflictException("Missed required attribute artifactId");
         }
@@ -70,36 +72,35 @@ public class SimpleGeneratorStrategy implements GeneratorStrategy {
             baseFolder.createFile("pom.xml", new byte[0]);
         }
 
-        AttributeValue parentArtifactId = attributes.get(PARENT_ARTIFACT_ID);
+        String parentArtifactId = projectConfig.getAttributes().get(PARENT_ARTIFACT_ID).get(0);
         if (parentArtifactId != null) {
-            model.setArtifactId(parentArtifactId.getString());
+            model.setArtifactId(parentArtifactId);
         }
-        AttributeValue parentGroupId = attributes.get(PARENT_GROUP_ID);
+        String parentGroupId = projectConfig.getAttributes().get(PARENT_GROUP_ID).get(0);
         if (parentGroupId != null) {
-            model.setGroupId(parentGroupId.getString());
+            model.setGroupId(parentGroupId);
         }
-        AttributeValue parentVersion = attributes.get(PARENT_VERSION);
+        String parentVersion = projectConfig.getAttributes().get(PARENT_VERSION).get(0);
         if (parentVersion != null) {
-            model.setVersion(parentVersion.getString());
+            model.setVersion(parentVersion);
         }
-        model.setArtifactId(artifactId.getString());
-        model.setGroupId(groupId.getString());
-        model.setVersion(version.getString());
-        AttributeValue packaging = attributes.get(PACKAGING);
+        model.setArtifactId(artifactId);
+        model.setGroupId(groupId);
+        model.setVersion(version);
+        String packaging = projectConfig.getAttributes().get(PACKAGING).get(0);
+
         if (packaging != null) {
-            model.setPackaging(packaging.getString());
+            model.setPackaging(packaging);
         }
-        AttributeValue sourceFolders = attributes.get(SOURCE_FOLDER);
-        if (sourceFolders != null) {
-            final String sourceFolder = sourceFolders.getString();
+        String sourceFolder = projectConfig.getAttributes().get(SOURCE_FOLDER).get(0);
+        if (sourceFolder != null) {
             baseFolder.createFolder(sourceFolder);
             if (!DEFAULT_SOURCE_FOLDER.equals(sourceFolder)) {
                 model.setBuild(new Build().setSourceDirectory(sourceFolder));
             }
         }
-        AttributeValue testSourceFolders = attributes.get(TEST_SOURCE_FOLDER);
-        if (testSourceFolders != null) {
-            final String testSourceFolder = testSourceFolders.getString();
+        String testSourceFolder = projectConfig.getAttributes().get(TEST_SOURCE_FOLDER).get(0);
+        if (testSourceFolder != null) {
             baseFolder.createFolder(testSourceFolder);
             if (!DEFAULT_TEST_SOURCE_FOLDER.equals(testSourceFolder)) {
                 Build build = model.getBuild();

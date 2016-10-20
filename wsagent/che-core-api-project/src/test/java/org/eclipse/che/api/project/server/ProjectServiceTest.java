@@ -410,9 +410,10 @@ public class ProjectServiceTest {
             @Override
             public void onCreateProject(FolderEntry baseFolder, Map<String, AttributeValue> attributes, Map<String, String> options)
                     throws ForbiddenException, ConflictException, ServerException {
-                baseFolder.createFolder("a");
-                baseFolder.createFolder("b");
-                baseFolder.createFile("test.txt", "test".getBytes(Charset.defaultCharset()));
+                FolderEntry projectFolder = baseFolder.createFolder("new_project");
+                projectFolder.createFolder("a");
+                projectFolder.createFolder("b");
+                projectFolder.createFile("test.txt", "test".getBytes(Charset.defaultCharset()));
             }
 
             @Override
