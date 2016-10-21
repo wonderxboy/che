@@ -194,6 +194,7 @@ public class WorkspaceEventsHandler {
     }
 
     private void onWorkspaceStarted(final String workspaceId) {
+        startWorkspaceNotification.hide();
         workspaceServiceClient.getWorkspace(workspaceId).then(new Operation<WorkspaceDto>() {
             @Override
             public void apply(WorkspaceDto workspace) throws OperationException {
@@ -384,7 +385,6 @@ public class WorkspaceEventsHandler {
                     break;
 
                 case ERROR:
-                    unSubscribeHandlers();
                     notificationManager.notify(locale.workspaceStartFailed(), FAIL, FLOAT_MODE);
                     loader.setError(LoaderPresenter.Phase.STARTING_WORKSPACE_RUNTIME);
                     final String workspaceName = workspace.getConfig().getName();
@@ -399,7 +399,6 @@ public class WorkspaceEventsHandler {
 
                 case STOPPED:
                     loader.setSuccess(LoaderPresenter.Phase.STOPPING_WORKSPACE);
-                    unSubscribeHandlers();
                     eventBus.fireEvent(new WorkspaceStoppedEvent(workspace));
                     startWorkspaceNotification.show(statusEvent.getWorkspaceId());
                     break;
