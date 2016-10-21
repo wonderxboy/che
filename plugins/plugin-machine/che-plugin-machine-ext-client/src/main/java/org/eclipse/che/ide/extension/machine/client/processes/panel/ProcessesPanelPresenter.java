@@ -126,7 +126,7 @@ public class ProcessesPanelPresenter extends BasePresenter implements ProcessesP
     private final CommandTypeRegistry           commandTypeRegistry;
     private final EventBus                      eventBus;
 
-    private ProcessTreeNode                     rootNode;
+    ProcessTreeNode                             rootNode;
     private final Map<String, ProcessTreeNode>  machineNodes;
 
     private ProcessTreeNode                     contextTreeNode;
