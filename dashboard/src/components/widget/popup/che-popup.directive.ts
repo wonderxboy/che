@@ -11,37 +11,43 @@
 'use strict';
 
 /**
- * Defines a directive for a toggle button.
- * @author Florent Benoit
+ * @ngdoc directive
+ * @name components.directive:chePopup
+ * @restrict E
+ * @function
+ * @element
+ *
+ * @description
+ * `<che-popup>` defines popup component as wrapper for popup massages
+ *
+ * @param {string=} che-title the title of popup massage
+ * @param {Function=} che-on-close close popup function
+ *
+ * @author Oleksii Orel
  */
-export class CheToggleButton {
+export class ChePopup {
   restrict: string;
   templateUrl: string;
+  transclude: boolean;
   scope: {
     title: string,
-    value: string,
-    fontIcon: string,
-    ngDisabled: string
+    onClose: string
   };
 
   /**
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor () {
-    this.restrict='E';
-    this.templateUrl = 'components/widget/toggle-button/che-toggle-button.html';
+  constructor() {
+    this.restrict = 'E';
+    this.transclude = true;
+    this.templateUrl = 'components/widget/popup/che-popup.html';
 
     // scope values
     this.scope = {
-      title:'@cheTitle',
-      value:'@?cheValue',
-      fontIcon: '@cheFontIcon',
-      ngDisabled: '@ngDisabled'
+      title: '@cheTitle',
+      onClose: '&cheOnClose'
     };
   }
 
-  link($scope: ng.IScope): void {
-    ($scope as any).controller = ($scope.$parent.$parent as any).cheToggleController;
-  }
 }
